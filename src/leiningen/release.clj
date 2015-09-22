@@ -186,29 +186,37 @@
 
 )
 
-(defn release [project & args]
+(defn release [project & [subname]]
   (binding [config (or (:lein-release project) config)]
     (let [current-version  (get project :version)
           release-version  (compute-release-version current-version)
           next-dev-version (compute-next-development-version (.replaceAll current-version "-SNAPSHOT" ""))
           target-dir       (:target-path project (:target-dir project (:jar-dir project "."))) ; target-path for lein2, target-dir or jar-dir for lein1
           jar-file-name    (format "%s/%s-%s.jar" target-dir (:name project) release-version)]
-      (when (is-snapshot? current-version)
-        (println (format "setting project version %s => %s" current-version release-version))
+      (case subname
+        "bump-dev-version"
+        (set-project-version! current-version next-dev-version)
+
+        "bump-release-version"
         (set-project-version! current-version release-version)
-        (println "adding, committing and tagging project.clj")
-        (scm! :add "project.clj")
-        (scm! :commit "--no-verify" "-m" (format "lein-release plugin: preparing %s release" release-version))
-        (scm! :tag (format "%s-%s" (:name project) release-version)))
-      (when-not (.exists (java.io.File. jar-file-name))
-        (println "creating jar and pom files...")
-        (sh! "lein" "jar")
-        (sh! "lein" "pom"))
-      (when (-> project :lein-release :build-uberjar)
-        (sh! "lein" "uberjar"))
-      (perform-deploy! project jar-file-name)
-      (when-not (is-snapshot? (extract-project-version-from-file))
-        (println (format "updating version %s => %s for next dev cycle" release-version next-dev-version))
-        (set-project-version! release-version next-dev-version)
-        (scm! :add "project.clj")
-        (scm! :commit "-m" (format "lein-release plugin: bumped version from %s to %s for next development cycle" release-version next-dev-version))))))
+
+        (do
+          (when (is-snapshot? current-version)
+            (println (format "setting project version %s => %s" current-version release-version))
+            (set-project-version! current-version release-version)
+            (println "adding, committing and tagging project.clj")
+            (scm! :add "project.clj")
+            (scm! :commit "--no-verify" "-m" (format "lein-release plugin: preparing %s release" release-version))
+            (scm! :tag (format "%s-%s" (:name project) release-version)))
+          (when-not (.exists (java.io.File. jar-file-name))
+            (println "creating jar and pom files...")
+            (sh! "lein" "jar")
+            (sh! "lein" "pom"))
+          (when (-> project :lein-release :build-uberjar)
+            (sh! "lein" "uberjar"))
+          (perform-deploy! project jar-file-name)
+          (when-not (is-snapshot? (extract-project-version-from-file))
+            (println (format "updating version %s => %s for next dev cycle" release-version next-dev-version))
+            (set-project-version! release-version next-dev-version)
+            (scm! :add "project.clj")
+            (scm! :commit "-m" (format "lein-release plugin: bumped version from %s to %s for next development cycle" release-version next-dev-version))))))))
