@@ -198,7 +198,9 @@
         (set-project-version! current-version next-dev-version)
 
         "bump-release-version"
-        (set-project-version! current-version release-version)
+        (do
+          (set-project-version! current-version release-version)
+          (scm! :tag (format "%s-%s" (:name project) release-version)))
 
         (do
           (when (is-snapshot? current-version)
