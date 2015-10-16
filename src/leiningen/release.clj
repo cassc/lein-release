@@ -200,6 +200,9 @@
         "bump-release-version"
         (do
           (set-project-version! current-version release-version)
+          (spit "release-version" release-version)
+          (scm! :add ".")
+          (scm! :commit "--no-verify" "-m" (format "lein-release plugin: preparing %s release" release-version))
           (scm! :tag (format "%s-%s" (:name project) release-version)))
 
         (do
