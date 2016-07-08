@@ -195,7 +195,9 @@
           jar-file-name    (format "%s/%s-%s.jar" target-dir (:name project) release-version)]
       (case subname
         "bump-dev-version"
-        (set-project-version! current-version next-dev-version)
+        (do
+          (set-project-version! current-version next-dev-version)
+          (scm! :commit "-m" (format "lein-release plugin: bumped version to %s for next development cycle" next-dev-version)))
 
         "bump-release-version"
         (do

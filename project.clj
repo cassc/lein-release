@@ -1,4 +1,4 @@
-(defproject cassc/lein-release "1.0.9"
+(defproject cassc/lein-release "1.1.0"
   :description "Leiningen Release Plugin"
   :url         "https://github.com/relaynetwork/lein-release"
   :dev-dependencies [[swank-clojure "1.4.2"]]
