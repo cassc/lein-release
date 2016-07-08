@@ -197,6 +197,7 @@
         "bump-dev-version"
         (do
           (set-project-version! current-version next-dev-version)
+          (scm! :add ".")
           (scm! :commit "-m" (format "lein-release plugin: bumped version to %s for next development cycle" next-dev-version)))
 
         "bump-release-version"
